@@ -22,4 +22,25 @@ message Electron
     optional Isolation isolation = 2;
     optional Extra extra = 3;
     optional PFIsolation pf_isolation = 4;
+
+    enum FlagName 
+    {
+        EIDVeryLoose = 0;
+        EIDLoose = 1;
+        EIDMedium = 2;
+        EIDTight = 3;
+        EIDSuperTight = 4;
+        EIDHyperTight1 = 5;
+        EIDHyperTight2 = 6;
+        EIDHyperTight3 = 7;
+        EIDHyperTight4 = 8;   
+    }
+
+    message Flag
+    {
+        required FlagName name = 1;
+        required int32 value = 2; 
+    }
+
+    repeated Flag flag = 5;
 }
