@@ -26,7 +26,7 @@ else
 endif
 
 CXXFLAGS = ${DEBUG} -fPIC -pipe -Wall -I../  -I/opt/local/include/ -I${BOOST_ROOT}/include -I${ROOTSYS}/include
-LIBS     = -L/usr/lib64 -L/opt/local/lib -lprotobuf -L${BOOST_ROOT}/lib -lboost_system -lboost_filesystem
+LIBS     = -L/usr/lib64 -L${PROTOBUFLIB} -lprotobuf -L${BOOST_ROOT}/lib -lboost_system -lboost_filesystem
 LDFLAGS  = `root-config --libs` -L/usr/lib64 -L/opt/local/lib -lprotobuf -L${BOOST_ROOT}/lib -lboost_system -lboost_filesystem
 
 # Rules to be always executed: empty ones
