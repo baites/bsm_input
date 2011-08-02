@@ -23,24 +23,27 @@ message Electron
     optional Extra extra = 3;
     optional PFIsolation pf_isolation = 4;
 
-    enum FlagName 
+    enum ElectronIDName 
     {
-        EIDVeryLoose = 0;
-        EIDLoose = 1;
-        EIDMedium = 2;
-        EIDTight = 3;
-        EIDSuperTight = 4;
-        EIDHyperTight1 = 5;
-        EIDHyperTight2 = 6;
-        EIDHyperTight3 = 7;
-        EIDHyperTight4 = 8;   
+        VeryLoose = 0;
+        Loose = 1;
+        Medium = 2;
+        Tight = 3;
+        SuperTight = 4;
+        HyperTight1 = 5;
+        HyperTight2 = 6;
+        HyperTight3 = 7;
+        HyperTight4 = 8;   
     }
 
-    message Flag
+    message ElectronID
     {
-        required FlagName name = 1;
-        required int32 value = 2; 
+        required ElectronIDName name = 1;
+        required bool identification = 2;
+        required bool isolation = 3;
+        required bool conversion_rejection = 4;
+        required bool impact_parameter = 5;
     }
 
-    repeated Flag flag = 5;
+    repeated ElectronID electronid = 5;
 }
