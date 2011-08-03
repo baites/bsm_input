@@ -35,9 +35,11 @@ else
 endif
 
 # Rules to be always executed: empty ones
-.PHONY: all
+.PHONY: lib
 
-all: pb obj lib
+lib: obj ${lib}
+
+all: obj lib prog
 
 help:
 	@echo "make <rule>"
@@ -50,9 +52,7 @@ help:
 
 pb: ${messages} ${protocobjs}
 
-obj: ${objs}
-
-lib: ${lib}
+obj: pb ${objs}
 
 prog: ${progs}
 
