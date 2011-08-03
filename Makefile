@@ -8,11 +8,13 @@
 CXX ?= g++
 
 # Subsystems that have compilable libraries
+#
 subsys   = 
 lib      = libbsm_input.so.1.2
 
 # Get list of all heads, sources and objects. Each source (%.cc) whould have
 # an object file except programs listed in PROGS
+#
 heads    = $(wildcard ./interface/*.h)
 srcs     = $(filter-out %.pb.cc,$(wildcard ./src/*.cc))
 
@@ -23,6 +25,7 @@ messages   = $(subst ./proto/,./message/,$(patsubst %.proto,%.pb.h,${protocs}))
 protocobjs = $(subst ./proto/,./obj/,$(patsubst %.proto,%.o,${protocs}))
 
 # List of programs with main functions to be filtered out of objects
+#
 progs    = $(patsubst ./src/%.cpp,%,$(wildcard ./src/*.cpp))
 
 CPPFLAGS += ${debug} -fPIC -pipe -Wall -I../ -I$(shell root-config --incdir)
@@ -35,20 +38,12 @@ else
 endif
 
 # Rules to be always executed: empty ones
+#
 .PHONY: lib
 
 lib: obj ${lib}
 
 all: obj lib prog
-
-help:
-	@echo "make <rule>"
-	@echo
-	@echo "Rules"
-	@echo "-----"
-	@echo
-	@echo "  all        compile executables"
-	@echo
 
 pb: ${messages} ${protocobjs}
 
