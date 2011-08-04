@@ -15,21 +15,21 @@ lib      = ./lib/libbsm_input.so.1.2
 # Get list of all heads, sources and objects. Each source (%.cc) whould have
 # an object file except programs listed in PROGS
 #
-heads    = $(wildcard ./interface/*.h)
-srcs     = $(filter-out %.pb.cc,$(wildcard ./src/*.cc))
+heads = $(filter-out %.pb.h,$(wildcard ./interface/*.h))
+srcs = $(filter-out %.pb.cc,$(wildcard ./src/*.cc))
 
-objs       = $(foreach obj,${srcs},$(addprefix ./obj/,$(patsubst ./src/%.cc,%.o,${obj})))
+objs = $(foreach obj,${srcs},$(addprefix ./obj/,$(patsubst %.cc,%.o,$(notdir ${obj}))))
 
-protocs    = $(wildcard ./proto/*.proto)
-messages   = $(subst ./proto/,./message/,$(patsubst %.proto,%.pb.h,${protocs}))
-protocobjs = $(subst ./proto/,./obj/,$(patsubst %.proto,%.o,${protocs}))
+protocs = $(wildcard proto/*.proto)
+messages = $(foreach pb,${protocs},$(patsubst proto/%.proto,message/%.pb.h,${pb}))
+protocobjs = $(foreach pb,${protocs},$(patsubst proto/%.proto,obj/%.o,${pb}))
 
 # List of programs with main functions to be filtered out of objects
 #
-progs    = $(foreach prog,$(wildcard ./src/*.cpp),$(addprefix ./bin/bsm_,$(patsubst ./src/%.cpp,%,${prog})))
+progs = $(foreach prog,$(wildcard ./src/*.cpp),$(addprefix ./bin/bsm_,$(patsubst ./src/%.cpp,%,${prog})))
 
 CPPFLAGS += ${debug} -fPIC -pipe -Wall -I../ -I$(shell root-config --incdir)
-LDFLAGS  += $(shell root-config --libs) -lprotobuf -lboost_system -lboost_filesystem
+LDFLAGS += $(shell root-config --libs) -lprotobuf -lboost_system -lboost_filesystem
 ifeq ($(shell uname),Linux)
 	LDFLAGS  +=  -L/usr/lib64
 else
@@ -55,16 +55,16 @@ prog: ${progs}
 
 # Protocol Buffers
 #
-${messages}:
+${messages}: message/%.pb.h: proto/%.proto
 	@echo "[+] Generating Protocol Buffers $@ ..."
 	protoc -I=proto --cpp_out message $(patsubst message/%.pb.h,proto/%.proto,$@)
-	@pushd ./interface &> /dev/null; ln -s ../$@; popd &> /dev/null
-	@pushd src &> /dev/null; ln -s ../$(patsubst %.h,%.cc,$@); popd &> /dev/null
+	@pushd ./interface &> /dev/null; ln -fs ../$@; popd &> /dev/null
+	@pushd src &> /dev/null; ln -fs ../$(patsubst %.h,%.cc,$@); popd &> /dev/null
 	@echo
 
 ${protocobjs}: ${messages}
 	@echo "[+] Compiling Protocol Buffers $@ ..."
-	${CXX} ${CPPFLAGS} -I./message -c $(addprefix ./message/,$(patsubst %.o,%.pb.cc,$(notdir $@))) -o $@
+	${CXX} ${CPPFLAGS} -I./message -c $(patsubst obj/%.o,message/%.pb.cc,$@) -o $@
 	@echo
 
 
@@ -91,7 +91,7 @@ ${lib}: ${objs}
 
 # Executables
 #
-${progs}: ${lib} 
+${progs}: bin/bsm_%: src/%.cpp ${lib}
 	@echo "[+] Compiling programs $@ ..."
 	$(eval prog_name=$(patsubst bin/bsm_%,%,$@))
 	${CXX} ${CPPFLAGS} -c src/${prog_name}.cpp -o ./obj/${prog_name}.o
@@ -112,4 +112,4 @@ clean: cleanbin
 	rm -f ./message/*.pb.{h,cc}
 	rm -f ./interface/*.pb.h
 	rm -f ./src/*.pb.cc
-	rm -f $(basename $(basename ${lib}))*
+	rm -f ./lib/*
