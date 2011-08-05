@@ -1,98 +1,101 @@
-CCC      = g++
+# Set CPPFLAGS environment variable for debugging:
+#
+# 	export CPPFLAGS=-gdwarf-2
+#
+# Created by Samvel Khalatyan, Aug 03, 2011
+# Copyright 2011, All rights reserved
+
+CXX ?= g++
 
 # Subsystems that have compilable libraries
-SUBSYS   = 
-LIB      = libbsm_input.so.1.2
+#
+subsys   = 
+lib      = ./lib/libbsm_input.so.1.2
 
 # Get list of all heads, sources and objects. Each source (%.cc) whould have
 # an object file except programs listed in PROGS
-HEADS    = $(wildcard ./interface/*.h)
-SRCS     = $(filter-out %.pb.cc,$(wildcard ./src/*.cc))
+#
+heads = $(filter-out %.pb.h,$(wildcard ./interface/*.h))
+srcs = $(filter-out %.pb.cc,$(wildcard ./src/*.cc))
 
-OBJS       = $(foreach obj,$(addprefix ./obj/,$(patsubst %.cc,%.o,$(notdir $(SRCS)))),$(obj))
+objs = $(foreach obj,${srcs},$(addprefix ./obj/,$(patsubst %.cc,%.o,$(notdir ${obj}))))
 
-PROTOCS    = $(wildcard ./proto/*.proto)
-MESSAGES   = $(subst ./proto/,./message/,$(patsubst %.proto,%.pb.h,$(PROTOCS)))
-PROTOCOBJS = $(subst ./proto/,./obj/,$(patsubst %.proto,%.o,$(PROTOCS)))
+protocs = $(wildcard proto/*.proto)
+messages = $(foreach pb,${protocs},$(patsubst proto/%.proto,message/%.pb.h,${pb}))
+protocobjs = $(foreach pb,${protocs},$(patsubst proto/%.proto,obj/%.o,${pb}))
 
 # List of programs with main functions to be filtered out of objects
-PROGS    = $(patsubst ./src/%.cpp,%,$(wildcard ./src/*.cpp))
+#
+progs = $(foreach prog,$(wildcard ./src/*.cpp),$(addprefix ./bin/bsm_,$(patsubst ./src/%.cpp,%,${prog})))
 
-# Flags used in compilation
-ifeq ($(strip $(DEBUG)),)
-	DEBUG = -O2
+CPPFLAGS += ${debug} -fPIC -pipe -Wall -I../ -I$(shell root-config --incdir)
+LDFLAGS += $(shell root-config --libs) -lprotobuf -lboost_system -lboost_filesystem
+ifeq ($(shell uname),Linux)
+	LDFLAGS  +=  -L/usr/lib64
 else
-	DEBUG = -O0 -g
+	CPPFLAGS += -I/opt/local/include
+	LDFLAGS  += -L/opt/local/lib
 endif
 
-CXXFLAGS = ${DEBUG} -fPIC -pipe -Wall -I../  -I/opt/local/include/ -I${BOOST_ROOT}/include -I${ROOTSYS}/include
-LIBS     = -L/usr/lib64 -L/opt/local/lib -lprotobuf -L${BOOST_ROOT}/lib -lboost_system -lboost_filesystem
-LDFLAGS  = `root-config --libs` -L/usr/lib64 -L/opt/local/lib -lprotobuf -L${BOOST_ROOT}/lib -lboost_system -lboost_filesystem
-
 # Rules to be always executed: empty ones
-.PHONY: all
+#
+.PHONY: lib
 
-all: pb obj lib
+lib: ${lib}
 
-help:
-	@echo "make <rule>"
-	@echo
-	@echo "Rules"
-	@echo "-----"
-	@echo
-	@echo "  all        compile executables"
-	@echo
+all: prog
 
-pb: $(MESSAGES) $(PROTOCOBJS)
+pb: ${protocobjs}
 
-obj: $(OBJS)
+obj: ${objs}
 
-lib: $(LIB)
-
-prog: $(PROGS)
+prog: ${progs}
 
 
 
 # Protocol Buffers
 #
-$(MESSAGES):
-	@echo "[+] Generating Protocol Buffers ..."
+${messages}: message/%.pb.h: proto/%.proto
+	@echo "[+] Generating Protocol Buffers $@ ..."
 	protoc -I=proto --cpp_out message $(patsubst message/%.pb.h,proto/%.proto,$@)
-	@pushd ./interface &> /dev/null; ln -s ../$@; popd &> /dev/null
-	@pushd src &> /dev/null; ln -s ../$(patsubst %.h,%.cc,$@); popd &> /dev/null
+	@pushd ./interface &> /dev/null; ln -fs ../$@; popd &> /dev/null
+	@pushd src &> /dev/null; ln -fs ../$(patsubst %.h,%.cc,$@); popd &> /dev/null
 	@echo
 
-$(PROTOCOBJS): $(MESSAGES)
-	@echo "[+] Compiling Protocol Buffers ..."
-	$(CCC) $(CXXFLAGS) -I./message -c $(addprefix ./message/,$(patsubst %.o,%.pb.cc,$(notdir $@))) -o $@
+${protocobjs}: ${messages}
+	@echo "[+] Compiling Protocol Buffers $@ ..."
+	${CXX} ${CPPFLAGS} -I./message -c $(patsubst obj/%.o,message/%.pb.cc,$@) -o $@
 	@echo
 
 
 
 # Regular compilcation
 #
-$(OBJS): pb $(SRCS) $(HEADS)
-	@echo "[+] Compiling objects ..."
-	$(CCC) $(CXXFLAGS) -c $(addprefix ./src/,$(patsubst %.o,%.cc,$(notdir $@))) -o $@
+${objs}: obj/%.o: src/%.cc interface/%.h ${protocobjs}
+	@echo "[+] Compiling objects $@ ..."
+	${CXX} ${CPPFLAGS} -c $(addprefix ./src/,$(patsubst %.o,%.cc,$(notdir $@))) -o $@
 	@echo
 
 
 
 # Libraries
 #
-$(LIB): $(OBJS)
-	@echo "[+] Generating Library ..."
-	$(CCC) -shared -W1,-soname,$(basename $@) $(LDFLAGS) -o $(addprefix ./lib/,$@) $(PROTOCOBJS) $(OBJS)
-	@cd ./lib; ln -fs $@ $(basename $@); ln -fs $(basename $@) $(basename $(basename $@))
+${lib}: ${objs}
+	@echo "[+] Generating Library $@ ..."
+	$(eval lib_name=$(notdir $@))
+	${CXX} -shared -W1,-soname,${lib_name} ${LDFLAGS} -o $@ ${objs} ${protocobjs}
+	@cd ./lib; ln -fs ${lib_name} $(basename ${lib_name}); ln -fs $(basename ${lib_name}) $(basename $(basename ${lib_name}))
 	@echo
 
 
 
 # Executables
 #
-$(PROGS): $(OBJS) 
-	@echo "[+] Compiling programs ..."
-	$(CCC) $(CXXFLAGS) `root-config --glibs` $(LIBS) $(OBJS) $(PROTOCOBJS) ./src/$@.cpp -o ./bin/test_$@
+${progs}: bin/bsm_%: src/%.cpp ${lib}
+	@echo "[+] Compiling programs $@ ..."
+	$(eval prog_name=$(patsubst bin/bsm_%,%,$@))
+	${CXX} ${CPPFLAGS} -c src/${prog_name}.cpp -o ./obj/${prog_name}.o
+	${CXX} ${LDFLAGS} ${lib} ./obj/${prog_name}.o -o $@
 	@echo
 
 
@@ -100,8 +103,8 @@ $(PROGS): $(OBJS)
 # Cleaning
 #
 cleanbin:
-ifneq ($(strip $(PROGS)),)
-	rm -f $(addprefix ./bin/test_,$(PROGS))
+ifneq ($(strip ${progs}),)
+	rm -f ./bin/bsm_*
 endif
 
 clean: cleanbin
@@ -109,4 +112,4 @@ clean: cleanbin
 	rm -f ./message/*.pb.{h,cc}
 	rm -f ./interface/*.pb.h
 	rm -f ./src/*.pb.cc
-	rm -f $(addprefix ./lib/,$(basename $(basename $(LIB)))*)
+	rm -f ./lib/*

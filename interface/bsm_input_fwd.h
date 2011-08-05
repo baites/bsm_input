@@ -24,6 +24,7 @@ namespace bsm
     class Vector;
     class PFIsolation;
     class PhysicsObject;
+    class PrimaryVertex;
     class Tracck;
     class Trigger;
 }
