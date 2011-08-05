@@ -71,7 +71,7 @@ ${protocobjs}: ${messages}
 
 # Regular compilcation
 #
-${objs}: ${protocobjs} ${srcs} ${heads}
+${objs}: obj/%.o: src/%.cc interface/%.h ${protocobjs}
 	@echo "[+] Compiling objects $@ ..."
 	${CXX} ${CPPFLAGS} -c $(addprefix ./src/,$(patsubst %.o,%.cc,$(notdir $@))) -o $@
 	@echo
