@@ -22,4 +22,28 @@ message Electron
     optional Isolation isolation = 2;
     optional Extra extra = 3;
     optional PFIsolation pf_isolation = 4;
+
+    enum ElectronIDName 
+    {
+        VeryLoose = 0;
+        Loose = 1;
+        Medium = 2;
+        Tight = 3;
+        SuperTight = 4;
+        HyperTight1 = 5;
+        HyperTight2 = 6;
+        HyperTight3 = 7;
+        HyperTight4 = 8;   
+    }
+
+    message ElectronID
+    {
+        required ElectronIDName name = 1;
+        required bool identification = 2;
+        required bool isolation = 3;
+        required bool conversion_rejection = 4;
+        required bool impact_parameter = 5;
+    }
+
+    repeated ElectronID electronid = 5;
 }
