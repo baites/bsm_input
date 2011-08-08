@@ -27,6 +27,11 @@ namespace bsm
     class PrimaryVertex;
     class Tracck;
     class Trigger;
+
+    class Format;
+    class ShortFormat;
+    class MediumFormat;
+    class FullFormat;
 }
 
 #endif
