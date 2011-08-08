@@ -17,10 +17,27 @@
 using namespace std;
 
 using bsm::Event;
+using bsm::EventSearcher;
 using bsm::Format;
 using bsm::ShortFormat;
 using bsm::MediumFormat;
 using bsm::FullFormat;
+
+// Event Searcher
+//
+EventSearcher::EventSearcher(const Event::Extra &extra):
+    _extra(extra)
+{
+}
+
+bool EventSearcher::operator()(const Event::Extra &extra)
+{
+    return (extra.run() ? extra.run() == _extra.run() : true)
+        && (extra.lumi() ? extra.lumi() == _extra.lumi() : true)
+        && extra.id() == _extra.id();
+}
+
+
 
 // Format
 //

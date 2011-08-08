@@ -12,6 +12,17 @@
 
 namespace bsm
 {
+    class EventSearcher
+    {
+        public:
+            EventSearcher(const Event_Extra &extra);
+
+            bool operator()(const Event_Extra &extra);
+
+        private:
+            const Event_Extra &_extra;
+    };
+
     class Format;
 
     template<typename T>

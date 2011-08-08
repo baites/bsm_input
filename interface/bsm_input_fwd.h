@@ -28,6 +28,7 @@ namespace bsm
     class Tracck;
     class Trigger;
 
+    class EventSearcher;
     class Format;
     class ShortFormat;
     class MediumFormat;
