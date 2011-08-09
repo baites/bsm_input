@@ -9,6 +9,7 @@
 #include "bsm_input/interface/Algebra.h"
 #include "bsm_input/interface/Electron.pb.h"
 #include "bsm_input/interface/Event.pb.h"
+#include "bsm_input/interface/Jet.pb.h"
 #include "bsm_input/interface/Muon.pb.h"
 #include "bsm_input/interface/Physics.pb.h"
 #include "bsm_input/interface/PrimaryVertex.pb.h"
@@ -102,7 +103,7 @@ ostream &ShortFormat::write(ostream &out, const Event &event) const
 
 ostream &ShortFormat::write(ostream &out, const Jet &jet) const
 {
-    return out << jet.physics_object().p4();
+    return out << "pat  p4: " << jet.physics_object().p4();
 }
 
 ostream &ShortFormat::write(ostream &out, const GenParticle &gen_particle) const
@@ -185,12 +186,31 @@ ostream &MediumFormat::write(ostream &out, const Event &event) const
             << " ---" << endl;
     }
 
+    out << endl;
+
+    out << event.jets().size() << " jets" << endl;
+    typedef ::google::protobuf::RepeatedPtrField<Jet> Jets;
+
+    for(Jets::const_iterator jet = event.jets().begin();
+            event.jets().end() != jet;
+            ++jet)
+    {
+        write(out, *jet) << endl
+            << " ---" << endl;
+    }
+
     return  out;
 }
 
 ostream &MediumFormat::write(ostream &out, const Jet &jet) const
 {
     ShortFormat::write(out, jet) << endl;
+    out << "raw  p4: ";
+    if (jet.has_uncorrected_p4())
+        out << jet.uncorrected_p4() << endl;
+    else
+        out << "not available" << endl;
+
     return out << jet.children().size() << " constituents";
 }
 
