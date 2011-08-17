@@ -237,7 +237,7 @@ ostream &MediumFormat::write(ostream &out,
 {
     ostringstream prefix("");
     if (level)
-        prefix << setw(level) << "- ";
+        prefix << setw(level * 2) << " " << "- ";
 
     out << prefix.str();
     ShortFormat::write(out, gen_particle) << endl;
@@ -247,7 +247,7 @@ ostream &MediumFormat::write(ostream &out,
             gen_particle.children().end() != product;
             ++product)
     {
-        write(out, *product, level + 1) << endl;
+        write(out, *product, level + 1);
     }
 
     return out;
