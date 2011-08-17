@@ -108,7 +108,9 @@ ostream &ShortFormat::write(ostream &out, const Jet &jet) const
 
 ostream &ShortFormat::write(ostream &out, const GenParticle &gen_particle) const
 {
-    return out << gen_particle.physics_object().p4();
+    return out << "id: " << gen_particle.id()
+        << " status: " << gen_particle.status()
+        << " " << gen_particle.physics_object().p4();
 }
 
 ostream &ShortFormat::write(ostream &out, const MissingEnergy &met) const
@@ -158,6 +160,18 @@ ostream &MediumFormat::write(ostream &out, const Event &event) const
             ++primary_vertex)
     {
         write(out, *primary_vertex) << endl;
+    }
+
+    out << endl;
+
+    out << event.gen_particles().size() << " gen particles" << endl;
+    typedef ::google::protobuf::RepeatedPtrField<GenParticle> GenParticles;
+    for(GenParticles::const_iterator particle = event.gen_particles().begin();
+            event.gen_particles().end() != particle;
+            ++particle)
+    {
+        write(out, *particle) << endl
+            << " ---" << endl;
     }
 
     out << endl;
@@ -217,9 +231,17 @@ ostream &MediumFormat::write(ostream &out, const Jet &jet) const
 ostream &MediumFormat::write(ostream &out, const GenParticle &particle) const
 {
     ShortFormat::write(out, particle) << endl;
-    return out << "id: " << particle.id()
-        << " status: " << particle.status()
-        << " " << particle.children().size() << " children";
+
+    typedef ::google::protobuf::RepeatedPtrField<GenParticle> GenParticles;
+    for(GenParticles::const_iterator product = particle.children().begin();
+            particle.children().end() != product;
+            ++product)
+    {
+        out << " - ";
+        ShortFormat::write(out, *product) << endl;
+    }
+
+    return out;
 }
 
 ostream &MediumFormat::write(ostream &out, const MissingEnergy &met) const
@@ -282,7 +304,23 @@ ostream &FullFormat::write(ostream &out, const Jet &jet) const
 
 ostream &FullFormat::write(ostream &out, const GenParticle &particle) const
 {
-    MediumFormat::write(out, particle) << endl;
+    ShortFormat::write(out, particle) << endl;
+
+    typedef ::google::protobuf::RepeatedPtrField<GenParticle> GenParticles;
+    for(GenParticles::const_iterator product = particle.children().begin();
+            particle.children().end() != product;
+            ++product)
+    {
+        out << " - ";
+        ShortFormat::write(out, *product) << endl;
+        for(GenParticles::const_iterator child = product->children().begin();
+                product->children().end() != child;
+                ++child)
+        {
+            out << "  + ";
+            ShortFormat::write(out, *product) << endl;
+        }
+    }
 
     return out;
 }
