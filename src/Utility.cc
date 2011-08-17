@@ -3,8 +3,9 @@
 // Created by Samvel Khalatyan, Jun 01, 2011
 // Copyright 2011, All rights reserved
 
-#include <ostream>
 #include <iomanip>
+#include <ostream>
+#include <sstream>
 
 #include "bsm_input/interface/Algebra.h"
 #include "bsm_input/interface/Electron.pb.h"
@@ -106,7 +107,9 @@ ostream &ShortFormat::write(ostream &out, const Jet &jet) const
     return out << "pat  p4: " << jet.physics_object().p4();
 }
 
-ostream &ShortFormat::write(ostream &out, const GenParticle &gen_particle) const
+ostream &ShortFormat::write(ostream &out,
+        const GenParticle &gen_particle,
+        const uint32_t &level) const
 {
     return out << "id: " << gen_particle.id()
         << " status: " << gen_particle.status()
@@ -228,17 +231,23 @@ ostream &MediumFormat::write(ostream &out, const Jet &jet) const
     return out << jet.children().size() << " constituents";
 }
 
-ostream &MediumFormat::write(ostream &out, const GenParticle &particle) const
+ostream &MediumFormat::write(ostream &out,
+        const GenParticle &gen_particle,
+        const uint32_t &level) const
 {
-    ShortFormat::write(out, particle) << endl;
+    ostringstream prefix("");
+    if (level)
+        prefix << setw(level) << "- ";
+
+    out << prefix.str();
+    ShortFormat::write(out, gen_particle) << endl;
 
     typedef ::google::protobuf::RepeatedPtrField<GenParticle> GenParticles;
-    for(GenParticles::const_iterator product = particle.children().begin();
-            particle.children().end() != product;
+    for(GenParticles::const_iterator product = gen_particle.children().begin();
+            gen_particle.children().end() != product;
             ++product)
     {
-        out << " - ";
-        ShortFormat::write(out, *product) << endl;
+        write(out, *product, level + 1) << endl;
     }
 
     return out;
@@ -298,29 +307,6 @@ ostream &FullFormat::write(ostream &out, const Event &event) const
 ostream &FullFormat::write(ostream &out, const Jet &jet) const
 {
     MediumFormat::write(out, jet) << endl;
-
-    return out;
-}
-
-ostream &FullFormat::write(ostream &out, const GenParticle &particle) const
-{
-    ShortFormat::write(out, particle) << endl;
-
-    typedef ::google::protobuf::RepeatedPtrField<GenParticle> GenParticles;
-    for(GenParticles::const_iterator product = particle.children().begin();
-            particle.children().end() != product;
-            ++product)
-    {
-        out << " - ";
-        ShortFormat::write(out, *product) << endl;
-        for(GenParticles::const_iterator child = product->children().begin();
-                product->children().end() != child;
-                ++child)
-        {
-            out << "  + ";
-            ShortFormat::write(out, *product) << endl;
-        }
-    }
 
     return out;
 }

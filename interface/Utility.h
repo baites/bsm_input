@@ -59,7 +59,8 @@ namespace bsm
                     const Jet &) const = 0;
 
             virtual std::ostream &write(std::ostream &,
-                    const GenParticle &) const = 0;
+                    const GenParticle &,
+                    const uint32_t &level = 0) const = 0;
 
             virtual std::ostream &write(std::ostream &,
                     const MissingEnergy &) const = 0;
@@ -87,7 +88,8 @@ namespace bsm
                     const Jet &) const;
 
             virtual std::ostream &write(std::ostream &,
-                    const GenParticle &) const;
+                    const GenParticle &,
+                    const uint32_t &level = 0) const;
 
             virtual std::ostream &write(std::ostream &,
                     const MissingEnergy &) const;
@@ -115,7 +117,8 @@ namespace bsm
                     const Jet &) const;
 
             virtual std::ostream &write(std::ostream &,
-                    const GenParticle &) const;
+                    const GenParticle &,
+                    const uint32_t &level = 0) const;
 
             virtual std::ostream &write(std::ostream &,
                     const MissingEnergy &) const;
@@ -141,9 +144,6 @@ namespace bsm
 
             virtual std::ostream &write(std::ostream &,
                     const Jet &) const;
-
-            virtual std::ostream &write(std::ostream &,
-                    const GenParticle &) const;
 
             virtual std::ostream &write(std::ostream &,
                     const MissingEnergy &) const;
