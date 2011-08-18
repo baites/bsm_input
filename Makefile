@@ -37,9 +37,9 @@ else
 	LDFLAGS  += -L/opt/local/lib
 endif
 
-CXXFLAGS = ${DEBUG} -fPIC -pipe -Wall -I../  -I/opt/local/include/ -I${BOOST_ROOT}/include -I${ROOTSYS}/include
-LIBS     = -L/usr/lib64 -L${PROTOBUFLIB} -lprotobuf -L${BOOST_ROOT}/lib -lboost_system -lboost_filesystem
-LDFLAGS  = `root-config --libs` -L/usr/lib64 -L/opt/local/lib -lprotobuf -L${BOOST_ROOT}/lib -lboost_system -lboost_filesystem
+#CXXFLAGS = ${DEBUG} -fPIC -pipe -Wall -I../  -I/opt/local/include/ -I${BOOST_ROOT}/include -I${ROOTSYS}/include
+#LIBS     = -L/usr/lib64 -L${PROTOBUFLIB} -lprotobuf -L${BOOST_ROOT}lib -lboost_system -lboost_filesystem
+#LDFLAGS  = `root-config --libs` -L/usr/lib64 -L/opt/local/lib -lprotobuf -L${BOOST_ROOT}lib -lboost_system -lboost_filesystem
 
 # Rules to be always executed: empty ones
 #
@@ -88,9 +88,6 @@ ${lib}: ${objs}
 	$(eval lib_name=$(notdir $@))
 	${CXX} -shared -W1,-soname,${lib_name} ${LDFLAGS} -o $@ ${objs} ${protocobjs}
 	@cd ./lib; ln -fs ${lib_name} $(basename ${lib_name}); ln -fs $(basename ${lib_name}) $(basename $(basename ${lib_name}))
-	@echo
-
-
 
 # Executables
 #
