@@ -10,7 +10,7 @@ CXX ?= g++
 # Subsystems that have compilable libraries
 #
 subsys   = 
-lib      = ./lib/libbsm_input.so.1.2
+lib      = ./lib/libbsm_input.so.1.3
 
 # Get list of all heads, sources and objects. Each source (%.cc) whould have
 # an object file except programs listed in PROGS

@@ -3,8 +3,9 @@
 // Created by Samvel Khalatyan, Jun 01, 2011
 // Copyright 2011, All rights reserved
 
-#include <ostream>
 #include <iomanip>
+#include <ostream>
+#include <sstream>
 
 #include "bsm_input/interface/Algebra.h"
 #include "bsm_input/interface/Electron.pb.h"
@@ -106,9 +107,13 @@ ostream &ShortFormat::write(ostream &out, const Jet &jet) const
     return out << "pat  p4: " << jet.physics_object().p4();
 }
 
-ostream &ShortFormat::write(ostream &out, const GenParticle &gen_particle) const
+ostream &ShortFormat::write(ostream &out,
+        const GenParticle &gen_particle,
+        const uint32_t &level) const
 {
-    return out << gen_particle.physics_object().p4();
+    return out << "id: " << gen_particle.id()
+        << " status: " << gen_particle.status()
+        << " " << gen_particle.physics_object().p4();
 }
 
 ostream &ShortFormat::write(ostream &out, const MissingEnergy &met) const
@@ -158,6 +163,18 @@ ostream &MediumFormat::write(ostream &out, const Event &event) const
             ++primary_vertex)
     {
         write(out, *primary_vertex) << endl;
+    }
+
+    out << endl;
+
+    out << event.gen_particles().size() << " gen particles" << endl;
+    typedef ::google::protobuf::RepeatedPtrField<GenParticle> GenParticles;
+    for(GenParticles::const_iterator particle = event.gen_particles().begin();
+            event.gen_particles().end() != particle;
+            ++particle)
+    {
+        write(out, *particle) << endl
+            << " ---" << endl;
     }
 
     out << endl;
@@ -214,12 +231,26 @@ ostream &MediumFormat::write(ostream &out, const Jet &jet) const
     return out << jet.children().size() << " constituents";
 }
 
-ostream &MediumFormat::write(ostream &out, const GenParticle &particle) const
+ostream &MediumFormat::write(ostream &out,
+        const GenParticle &gen_particle,
+        const uint32_t &level) const
 {
-    ShortFormat::write(out, particle) << endl;
-    return out << "id: " << particle.id()
-        << " status: " << particle.status()
-        << " " << particle.children().size() << " children";
+    ostringstream prefix("");
+    if (level)
+        prefix << setw(level * 2) << " " << "- ";
+
+    out << prefix.str();
+    ShortFormat::write(out, gen_particle) << endl;
+
+    typedef ::google::protobuf::RepeatedPtrField<GenParticle> GenParticles;
+    for(GenParticles::const_iterator product = gen_particle.children().begin();
+            gen_particle.children().end() != product;
+            ++product)
+    {
+        write(out, *product, level + 1);
+    }
+
+    return out;
 }
 
 ostream &MediumFormat::write(ostream &out, const MissingEnergy &met) const
@@ -276,13 +307,6 @@ ostream &FullFormat::write(ostream &out, const Event &event) const
 ostream &FullFormat::write(ostream &out, const Jet &jet) const
 {
     MediumFormat::write(out, jet) << endl;
-
-    return out;
-}
-
-ostream &FullFormat::write(ostream &out, const GenParticle &particle) const
-{
-    MediumFormat::write(out, particle) << endl;
 
     return out;
 }
